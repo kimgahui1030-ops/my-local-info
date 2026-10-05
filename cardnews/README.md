@@ -35,8 +35,19 @@ python3 cardnews/selftest.py                                     # 도구 자체
 | `prompts/copy_ko.md` | 카피 규칙과 스펙 형식 |
 | `fonts/` | Pretendard (SIL OFL 1.1, `OFL-Pretendard.txt`) |
 
+## 매일 자동으로 돌리기
+```
+05:30 KST  GitHub Actions cardnews-collect  →  RSS·지역 데이터 수집 → cardnews/sources/<날짜>.json (main 에 커밋)
+07:00 KST  Claude 루틴(ROUTINE.md)          →  소재 선택·카피·검수 → cardnews/specs/daily/<날짜>/ (cardnews-daily 브랜치에 푸시)
+  푸시 직후 GitHub Actions cardnews-render   →  Pexels 사진 → 렌더 → 구글 드라이브 "카드뉴스/<날짜>/" → 텔레그램 알림
+사용자                                       →  폰 드라이브 앱에서 저장 → 인스타 앱에서 음악·캡션 넣고 공유
+```
+- 수집 소스: `collect/feeds.json` (계정 방향 `life`/`issue` 와 맞춤). 계정별 하루 개수: `brands.json` 의 `daily_count`.
+- 저장소 Secrets: `RCLONE_CONFIG`(구글 드라이브), `DRIVE_DIR`, `PEXELS_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` — 없는 것은 그 단계만 건너뜁니다.
+- 예약 수집(`schedule`)은 워크플로 파일이 기본 브랜치(main)에 있어야 동작합니다.
+
 ## 아직 없는 것 (2단계 이후)
-Pixabay·Pexels 자동 검색, AI 이미지 생성, 해외 이슈형 템플릿 B, 자동 발행·예약, 성과 수집. 수집기(`collect.py`)는 PC의 `Desktop\claude\cardnews\` 에 있습니다.
+AI 이미지 생성, 해외 이슈형 템플릿 B, 인스타 자동 발행·예약, 성과 수집. 수집기(`collect.py`)는 PC의 `Desktop\claude\cardnews\` 에 있습니다.
 
 ## 참고한 공개 소스 (모두 MIT, 코드 복사 없이 방식만 참고)
 - jeevanbavandla/instagram-carousel-skill — 고정 크기 HTML 슬라이드 + Playwright 캡처 방식

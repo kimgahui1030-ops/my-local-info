@@ -1,0 +1,21 @@
+{
+  "_note": "direction 은 brands.json 의 계정 방향과 맞춘다. life=생활정보·혜택, issue=해외·국내 이슈. 주소가 막히면 수집 결과 errors 에 남으니 첫 실행 뒤 정리한다.",
+  "per_feed_limit": 30,
+  "keep_days": 14,
+  "feeds": [
+    {"name": "구글뉴스: 지원금 신청", "direction": "life", "lang": "ko",
+     "url": "https://news.google.com/rss/search?q=%EC%A7%80%EC%9B%90%EA%B8%88+%EC%8B%A0%EC%B2%AD+when:2d&hl=ko&gl=KR&ceid=KR:ko"},
+    {"name": "구글뉴스: 청년 혜택", "direction": "life", "lang": "ko",
+     "url": "https://news.google.com/rss/search?q=%EC%B2%AD%EB%85%84+%ED%98%9C%ED%83%9D+when:2d&hl=ko&gl=KR&ceid=KR:ko"},
+    {"name": "구글뉴스: 생활 꿀팁", "direction": "life", "lang": "ko",
+     "url": "https://news.google.com/rss/search?q=%EC%83%9D%ED%99%9C+%EA%BF%80%ED%8C%81+when:2d&hl=ko&gl=KR&ceid=KR:ko"},
+    {"name": "정책브리핑 정책뉴스", "direction": "life", "lang": "ko",
+     "url": "https://www.korea.kr/rss/policy.xml"},
+    {"name": "UPI Odd News", "direction": "issue", "lang": "en",
+     "url": "https://rss.upi.com/news/odd_news.rss"},
+    {"name": "구글뉴스: odd news", "direction": "issue", "lang": "en",
+     "url": "https://news.google.com/rss/search?q=bizarre+OR+%22odd+news%22+when:2d&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "Reddit r/nottheonion", "direction": "issue", "lang": "en",
+     "url": "https://www.reddit.com/r/nottheonion/top/.rss?t=day"}
+  ]
+}

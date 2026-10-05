@@ -48,7 +48,7 @@ def load_brand(name: str) -> dict:
 
 
 def image_ctx(img: dict | None, spec_dir: Path) -> dict:
-    if not img:
+    if not img or not img.get("path"):  # 검색어만 있고 아직 사진이 없으면 색 배경
         return {"photo": None, "focus": "center", "ai_label": False}
     fp = Path(img["path"])
     if not fp.is_absolute():
@@ -96,6 +96,8 @@ def credit_lines(spec: dict) -> list[str]:
     lines = []
     for where, img in lint._images(spec):
         src = img.get("source")
+        if not img.get("path"):
+            continue
         if src == "ai":
             lines.append(f"{where}: AI 생성 이미지 ({img.get('tool', '도구 미기재')}) — 이미지에 표기함")
         elif src == "own":

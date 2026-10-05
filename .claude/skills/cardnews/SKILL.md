@@ -28,6 +28,9 @@ python3 -m playwright install chromium   # 이미 브라우저가 있으면 생�
 
 여러 개를 요청받으면("오늘 5개") 소재마다 1~7을 반복하고 마지막에 한 번에 보고한다.
 
+## 매일 자동 제작
+"오늘 카드뉴스 만들어" 또는 예약된 루틴으로 실행되면 `cardnews/ROUTINE.md` 를 처음부터 끝까지 그대로 따른다. 소재는 GitHub Actions 가 모은 `cardnews/sources/<날짜>.json` 만 쓰고, 사진·렌더·드라이브 업로드는 Actions(`cardnews-render`)가 한다.
+
 ## 발행 (현재 단계: 수동)
 `cardnews/out/<날짜>/<id>/` 폴더를 폰으로 옮겨 이미지를 순서대로 고르고 `caption.txt` 를 붙여넣는다. 발행하면 `meta.json` 의 `published` 에 날짜·계정·게시물 링크를 적는다.
 

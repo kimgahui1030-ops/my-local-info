@@ -129,6 +129,9 @@ def check_spec(spec: dict, spec_dir: Path | None = None, out_root: Path | None =
 
     # 이미지: 출처 기록 필수, 원본 게시물 사진 금지
     for where, img in _images(spec):
+        if img.get("query") and not img.get("path"):
+            add("warn", where, f"사진은 렌더 단계에서 '{img['query']}' 로 검색해 붙입니다(키가 없으면 색 배경)")
+            continue
         src = img.get("source")
         if src == "original_post":
             add("error", where, "원본 게시물 사진은 쓰지 않습니다(저작권·오리지널 정책)")

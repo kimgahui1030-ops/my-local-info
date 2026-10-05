@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# cardnews 렌더 결과물
+/cardnews/out/
+__pycache__/

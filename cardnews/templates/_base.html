@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face { font-family: "Pretendard"; font-weight: 400; src: url("{{ fonts }}/Pretendard-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Pretendard"; font-weight: 700; src: url("{{ fonts }}/Pretendard-Bold.woff2") format("woff2"); }
+@font-face { font-family: "Pretendard"; font-weight: 800; src: url("{{ fonts }}/Pretendard-ExtraBold.woff2") format("woff2"); }
+:root { --accent: {{ brand.accent }}; --ink: #16181d; --hl: #FFD400; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1350px; overflow: hidden; }
+body { font-family: "Pretendard", sans-serif; color: var(--ink); background: #fff; word-break: keep-all; position: relative; }
+.photo { position: absolute; inset: 0; background-size: cover; background-repeat: no-repeat; }
+.photo.none { background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 55%, #000) 0%, #0d0f14 100%); }
+.hl { color: var(--hl); font-style: normal; }
+[data-fit] { overflow: hidden; }
+{% block style %}{% endblock %}
+</style>
+</head>
+<body>
+{% block body %}{% endblock %}
+<script>
+// data-fit 상자마다 글자가 넘치지 않을 때까지 크기를 줄이고, 실제 글자 영역을 돌려준다.
+window.__fit = () => [...document.querySelectorAll('[data-fit]')].map(el => {
+  let size = parseFloat(getComputedStyle(el).fontSize);
+  const min = parseFloat(el.dataset.min || '24');
+  const fits = () => el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1;
+  while (!fits() && size > min) { size -= 2; el.style.fontSize = size + 'px'; }
+  const range = document.createRange(); range.selectNodeContents(el);
+  const r = range.getBoundingClientRect();
+  return { name: el.dataset.fit, size, overflow: !fits(),
+           top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+});
+</script>
+</body>
+</html>

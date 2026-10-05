@@ -1,0 +1,23 @@
+{% extends "_base.html" %}
+{# 템플릿 A 매거진형 표지: 사진 + 하단 40~45% 그라데이션 + 55% 계정 라벨 + 65~80% 2줄 제목 #}
+{% block style %}
+.shade { position: absolute; left: 0; right: 0; bottom: 0; height: 52%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 22%, rgba(0,0,0,.88) 60%, rgba(0,0,0,.92) 100%); }
+.label { position: absolute; left: 54px; top: 718px; height: 48px; display: flex; align-items: center; gap: 10px;
+  color: rgba(255,255,255,.9); font-weight: 700; font-size: 30px; letter-spacing: -0.01em; }
+.label::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.title { position: absolute; left: 54px; right: 54px; top: 864px; height: 230px;
+  display: flex; flex-direction: column; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 84px; line-height: 1.22; letter-spacing: -0.03em; }
+.title span { display: block; white-space: nowrap; }
+.swipe { position: absolute; right: 54px; top: 1140px; color: rgba(255,255,255,.75); font-weight: 700; font-size: 28px; }
+.ai { position: absolute; left: 54px; bottom: 34px; color: rgba(255,255,255,.6); font-size: 22px; }
+{% endblock %}
+{% block body %}
+<div class="photo{% if not photo %} none{% endif %}"{% if photo %} style="background-image:url('{{ photo }}');background-position:{{ focus }}"{% endif %}></div>
+<div class="shade"></div>
+<div class="label" data-fit="label" data-min="20">{{ brand.label }}</div>
+<div class="title" data-fit="title" data-min="44">{% for line in title_lines %}<span>{{ line }}</span>{% endfor %}</div>
+{% if swipe %}<div class="swipe">넘겨서 보기 →</div>{% endif %}
+{% if ai_label %}<div class="ai">이해를 돕기 위한 AI 생성 이미지</div>{% endif %}
+{% endblock %}

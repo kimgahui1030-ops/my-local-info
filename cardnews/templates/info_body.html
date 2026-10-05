@@ -1,0 +1,34 @@
+{% extends "_base.html" %}
+{# 템플릿 C 정보형 본문 장: 상단 이미지 + 하단 흰 카드(번호·제목·강조문·본문) #}
+{% block style %}
+.top { position: absolute; left: 0; right: 0; top: 0; height: 640px; overflow: hidden; }
+.top .photo { position: absolute; inset: 0; }
+.big-no { position: absolute; left: 54px; bottom: 90px; color: rgba(255,255,255,.95); font-weight: 800; font-size: 220px; letter-spacing: -0.06em; line-height: 1; }
+.page { position: absolute; right: 40px; top: 40px; padding: 8px 18px; border-radius: 999px;
+  background: rgba(0,0,0,.55); color: #fff; font-weight: 700; font-size: 26px; }
+.card { position: absolute; left: 0; right: 0; top: 580px; bottom: 0; background: #fff;
+  border-radius: 44px 44px 0 0; padding: 64px 72px 0; }
+.card > :first-child { margin-top: 0; }
+.no { display: inline-block; padding: 6px 18px; border-radius: 10px; background: var(--accent); color: #fff;
+  font-weight: 800; font-size: 30px; }
+.heading { margin-top: 26px; max-height: 160px; white-space: pre-line; font-weight: 800; font-size: 60px; line-height: 1.25; letter-spacing: -0.03em; }
+.emph { margin-top: 22px; max-height: 110px; color: color-mix(in srgb, var(--accent) 80%, #000); font-weight: 700; font-size: 38px; line-height: 1.4; }
+.text { margin-top: 22px; max-height: 270px; color: #3b3f47; font-size: 36px; line-height: 1.6; white-space: pre-line; }
+.foot { position: absolute; left: 72px; right: 72px; bottom: 44px; display: flex; justify-content: space-between;
+  color: #9aa0a8; font-size: 24px; font-weight: 700; }
+.ai { color: #b3b8bf; font-weight: 400; }
+{% endblock %}
+{% block body %}
+<div class="top">
+  <div class="photo{% if not photo %} none{% endif %}"{% if photo %} style="background-image:url('{{ photo }}');background-position:{{ focus }}"{% endif %}></div>
+  {% if not photo %}<div class="big-no">{{ '%02d' % no }}</div>{% endif %}
+  <div class="page">{{ page }} / {{ total }}</div>
+</div>
+<div class="card">
+  {% if photo %}<span class="no">{{ '%02d' % no }}</span>{% endif %}
+  <div class="heading" data-fit="heading" data-min="36">{{ heading }}</div>
+  {% if emphasis %}<div class="emph" data-fit="emphasis" data-min="26">{{ emphasis }}</div>{% endif %}
+  {% if text %}<div class="text" data-fit="body" data-min="26">{{ text }}</div>{% endif %}
+</div>
+<div class="foot"><span>{{ brand.handle }}</span>{% if ai_label %}<span class="ai">AI 생성 이미지</span>{% endif %}</div>
+{% endblock %}

@@ -136,6 +136,7 @@ def benchmark_items(today: date, recent_days: int = 21) -> list[dict]:
                 "direction": acc["direction"], "lang": "en" if acc["username"] == "realkhalilu" else "ko",
                 "metrics": {"likes": m.get("like_count"), "comments": m.get("comments_count"),
                             "x_median": m.get("x_median"), "x_comments": m.get("x_comments"),
+                            "x_views": m.get("x_views"), "views": m.get("view_count"), "x_followers": m.get("x_followers"),
                             "media_type": m.get("media_type")},
             })
     return out

@@ -28,7 +28,7 @@ def load(path: Path) -> dict:
 
 
 def strength(h: dict) -> float:
-    return max(h.get("x_median") or 0, h.get("x_comments") or 0)
+    return max(h.get("x_median") or 0, h.get("x_comments") or 0, h.get("x_views") or 0)
 
 
 def line(acc: str, h: dict) -> str:

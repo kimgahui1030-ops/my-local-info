@@ -5,8 +5,9 @@
 공개 게시물 수치를 읽는다. GitHub Actions 에서 매일 돈다.
 
 판정 규칙(이전 발굴기·bench_watch·SNS성장학교 강의에서 가져옴)
-- 터진 글: 계정 **최근 28일** 중앙값의 2배 이상. 좋아요뿐 아니라 **댓글** 배수도 본다
-  ("소재 판단은 댓글 수"). 옛 대박이 기준을 부풀리지 않도록 최근 창만 쓴다.
+- 터진 글: 계정 **최근 28일** 중앙값의 2배 이상. 좋아요·**댓글**("소재 판단은 댓글 수")·**조회**(보너스는
+  조회 기준) 중 하나라도 넘으면 된다. 옛 대박이 기준을 부풀리지 않도록 최근 창만 쓴다.
+  숏튜버·샤르르식 "구독 대비 배수"(조회 ÷ 팔로워)도 함께 남긴다.
 - 계정 상태: 마지막 게시 14일 넘으면 휴면 → 그 계정 글은 소재에서 뺀다.
 - 팔로워 증가: 지난 스냅샷과의 차이 ÷ 실제 경과일(하루 환산).
 - 후보(ig_inbox.txt): 확정·관찰·탈락으로 판정만 하고, 확정이면 그날부터 터진 글도 함께 본다.
@@ -32,7 +33,7 @@ import polite  # noqa: E402
 
 OUT = HERE.parent / "sources" / "benchmark"
 KST = timezone(timedelta(hours=9))
-FIELDS = ("followers_count,media_count,media.limit({n}){{id,caption,like_count,comments_count,"
+FIELDS = ("followers_count,media_count,media.limit({n}){{id,caption,like_count,comments_count,view_count,"
           "media_type,media_product_type,permalink,timestamp}}")
 RATE_CODES = {4, 17, 32, 613}  # 메타 호출 한도 오류 → 즉시 전체 중단
 
@@ -74,26 +75,33 @@ def analyze(acc: dict, data: dict, cfg: dict, now: datetime) -> dict:
     base = recent if len(recent) >= 5 else feed  # 최근 글이 너무 적으면 전체로 대신
     likes = [m["like_count"] for m in base if isinstance(m.get("like_count"), int)]
     comments = [m["comments_count"] for m in base if isinstance(m.get("comments_count"), int)]
-    med_l, med_c = median_or_none(likes), median_or_none(comments)
+    views = [m["view_count"] for m in base if isinstance(m.get("view_count"), int)]
+    med_l, med_c, med_v = median_or_none(likes), median_or_none(comments), median_or_none(views)
+    followers = data.get("followers_count") or 0
 
     last = max((m["_ts"] for m in feed), default=None)
     last_age = (now - last).days if last else None
     status = "휴면" if last_age is None or last_age > 14 else "활동"
     hot = []
     for m in recent:
-        lk, cm = m.get("like_count"), m.get("comments_count")
+        lk, cm, vw = m.get("like_count"), m.get("comments_count"), m.get("view_count")
         xl = round(lk / med_l, 1) if med_l and isinstance(lk, int) else None
         xc = round(cm / med_c, 1) if med_c and isinstance(cm, int) and cm >= 10 else None
-        if (xl and xl >= mult) or (xc and xc >= mult):
+        xv = round(vw / med_v, 1) if med_v and isinstance(vw, int) else None
+        if any(x and x >= mult for x in (xl, xc, xv)):
             hot.append({k: v for k, v in m.items() if not k.startswith("_")}
-                       | {"x_median": xl, "x_comments": xc, "age_days": (now - m["_ts"]).days})
-    hot.sort(key=lambda h: max(h["x_median"] or 0, h["x_comments"] or 0), reverse=True)
+                       | {"x_median": xl, "x_comments": xc, "x_views": xv,
+                          # 숏튜버·샤르르식 "구독 대비 배수": 조회(없으면 좋아요) ÷ 팔로워
+                          "x_followers": round((vw if isinstance(vw, int) else lk or 0) / followers, 2) if followers else None,
+                          "age_days": (now - m["_ts"]).days})
+    hot.sort(key=lambda h: max(h["x_median"] or 0, h["x_comments"] or 0, h["x_views"] or 0), reverse=True)
     return {
         "username": acc["username"], "direction": acc.get("direction", "life"),
         "followers": data.get("followers_count"), "media_count": data.get("media_count"),
         "feed_posts": len(feed), "recent_posts": len(recent),
         "posts_per_day": round(len(recent) / window.days, 2),
         "likes_hidden": len(base) - len(likes), "median_likes": med_l, "median_comments": med_c,
+        "median_views": med_v,
         "median_basis": "최근" if base is recent else "전체", "last_post_days": last_age,
         "status": status, "hot": hot if status == "활동" else [],
     }

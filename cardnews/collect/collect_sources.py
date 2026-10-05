@@ -16,18 +16,19 @@ import html
 import json
 import re
 import sys
-import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import polite  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 CARDNEWS = HERE.parent
 REPO = CARDNEWS.parent
 OUT = CARDNEWS / "sources"
 KST = timezone(timedelta(hours=9))
-UA = "Mozilla/5.0 (cardnews-collector; +https://github.com)"
 ATOM = "{http://www.w3.org/2005/Atom}"
 
 
@@ -87,9 +88,7 @@ def parse_feed(xml_bytes: bytes, feed: dict, limit: int) -> list[dict]:
 
 
 def fetch(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return r.read()
+    return polite.get(url)
 
 
 def local_info(today: date) -> list[dict]:
@@ -136,8 +135,31 @@ def benchmark_items(today: date, recent_days: int = 21) -> list[dict]:
                 "source": f"@{acc['username']}", "feed": "instagram-benchmark",
                 "direction": acc["direction"], "lang": "en" if acc["username"] == "realkhalilu" else "ko",
                 "metrics": {"likes": m.get("like_count"), "comments": m.get("comments_count"),
-                            "x_median": m.get("x_median"), "media_type": m.get("media_type")},
+                            "x_median": m.get("x_median"), "x_comments": m.get("x_comments"),
+                            "media_type": m.get("media_type")},
             })
+    return out
+
+
+def feed_health(today: date, counts: dict[str, int], days: int = 7) -> list[dict]:
+    """조용한 실패 잡기: 평소엔 들어오던 피드가 0건이거나 평소의 1/3 아래면 표시한다."""
+    hist: dict[str, list[int]] = {}
+    for f in OUT.glob("*.json"):
+        try:
+            d = date.fromisoformat(f.stem)
+        except ValueError:
+            continue
+        if d < today and today - d <= timedelta(days=days):
+            for name, n in json.loads(f.read_text("utf-8")).get("feed_counts", {}).items():
+                hist.setdefault(name, []).append(n)
+    out = []
+    for name, n in counts.items():
+        past = hist.get(name)
+        if not past:
+            continue
+        avg = sum(past) / len(past)
+        if avg >= 3 and n < avg / 3:
+            out.append({"feed": name, "today": n, "avg7": round(avg, 1), "note": "평소보다 크게 줄었습니다"})
     return out
 
 
@@ -163,12 +185,13 @@ def main(argv: list[str] | None = None) -> int:
     today = date.fromisoformat(a.date) if a.date else datetime.now(KST).date()
     seen = seen_links(today, cfg.get("keep_days", 14))
 
-    items, errors = [], []
+    items, errors, counts = [], [], {}
     for feed in cfg["feeds"]:
         try:
             raw = a.fixture.read_bytes() if a.fixture else fetch(feed["url"])
             got = parse_feed(raw, feed, cfg.get("per_feed_limit", 30))
             items += got
+            counts[feed["name"]] = len(got)
             print(f"✓ {feed['name']}: {len(got)}건")
         except Exception as e:  # 피드 하나가 막혀도 나머지는 계속
             errors.append({"feed": feed["name"], "error": f"{type(e).__name__}: {e}"[:200]})
@@ -189,7 +212,8 @@ def main(argv: list[str] | None = None) -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     out = OUT / f"{today.isoformat()}.json"
     data = {"date": today.isoformat(), "collected_at": datetime.now(KST).isoformat(timespec="seconds"),
-            "count": len(uniq), "items": list(uniq.values()), "errors": errors}
+            "count": len(uniq), "feed_counts": counts, "health": feed_health(today, counts),
+            "items": list(uniq.values()), "errors": errors}
     out.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", "utf-8")
     print(f"→ {out.relative_to(REPO)}: 새 소재 {len(uniq)}건 (중복 제외 {dup}, 실패 피드 {len(errors)})")
     return 0 if uniq or not errors else 1

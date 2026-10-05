@@ -43,6 +43,9 @@ python3 cardnews/selftest.py                                     # 도구 자체
 사용자                                       →  폰 드라이브 앱에서 저장 → 인스타 앱에서 음악·캡션 넣고 공유
 ```
 - 수집 소스: `collect/feeds.json` (계정 방향 `life`/`issue` 와 맞춤). 계정별 하루 개수: `brands.json` 의 `daily_count`.
+- 인스타 벤치마킹(`collect/ig_benchmark.py`, 공식 API): 계정마다 최근 28일 중앙값 대비 좋아요·댓글 2배 이상을 "터진 글"로, 14일 무게시는 휴면으로 기록하고 팔로워 증가를 하루 단위로 환산합니다. 새 후보는 `collect/ig_inbox.txt` 에 아이디를 적으면 확정·관찰·탈락으로 판정합니다.
+- 모든 외부 요청은 `collect/polite.py` 를 거칩니다: 호스트별 간격·지터·상한, 429·봇 확인·로그인 요구 시 그 호스트 중단, 연속 3회 실패 시 중단. 프록시·다계정·캡차 풀기는 쓰지 않습니다.
+- 알림(`collect/notify.py`): 3일 안에 평소의 5배 이상 나온 글은 바로, 지난 7일 정리는 월요일에 텔레그램으로 보냅니다. 평소보다 크게 줄어든 피드도 알립니다.
 - 저장소 Secrets: `RCLONE_CONFIG`(구글 드라이브), `DRIVE_DIR`, `PEXELS_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` — 없는 것은 그 단계만 건너뜁니다.
 - 예약 수집(`schedule`)은 워크플로 파일이 기본 브랜치(main)에 있어야 동작합니다.
 

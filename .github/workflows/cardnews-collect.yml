@@ -46,3 +46,10 @@ jobs:
           # [CF-Pages-Skip]: 소재 커밋으로 웹사이트가 다시 배포되지 않게 한다
           git commit -m "chore(cardnews): 소재 수집 $(TZ=Asia/Seoul date +%F) [CF-Pages-Skip]"
           git push
+
+      - name: 텔레그램 알림(떡상 즉시·월요일 주간 정리)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python3 cardnews/collect/notify.py

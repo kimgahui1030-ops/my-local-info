@@ -1,0 +1,106 @@
+# 카드뉴스 렌더·전달 — Claude 가 오늘 스펙(cardnews/specs/daily/<날짜>/)을 푸시하면
+# 사진을 붙이고(Pexels) 1080×1350 JPEG로 렌더해 구글 드라이브에 올리고 텔레그램으로 알린다.
+#
+# 필요한 저장소 Secrets (없으면 그 단계만 건너뜀)
+#   RCLONE_CONFIG       rclone.conf 내용 — 원격 이름은 gdrive
+#   DRIVE_DIR           드라이브 안 폴더 이름(기본: 카드뉴스)
+#   PEXELS_API_KEY      사진 검색 키(없으면 색 배경 표지)
+#   TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID   완료 알림
+name: cardnews-render
+
+on:
+  push:
+    branches: ["cardnews-daily", "claude/**"]
+    paths: ["cardnews/specs/daily/**"]
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "렌더할 날짜(YYYY-MM-DD, 비우면 오늘 KST)"
+        required: false
+
+concurrency:
+  group: cardnews-render-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RCLONE_CONFIG_TEXT: ${{ secrets.RCLONE_CONFIG }}
+      DRIVE_DIR: ${{ secrets.DRIVE_DIR }}
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 설치
+        run: |
+          pip install -r cardnews/requirements.txt
+          python3 -m playwright install --with-deps chromium
+
+      - name: 오늘 스펙 찾기
+        id: specs
+        run: |
+          DAY="${{ inputs.date }}"
+          [ -z "$DAY" ] && DAY=$(TZ=Asia/Seoul date +%F)
+          echo "day=$DAY" >> "$GITHUB_OUTPUT"
+          ls cardnews/specs/daily/$DAY/*.json > specs.txt 2>/dev/null || true
+          echo "스펙 $(wc -l < specs.txt)건 ($DAY)"
+          [ -s specs.txt ] || { echo "렌더할 스펙이 없습니다"; exit 1; }
+
+      - name: 사진 붙이기
+        run: python3 cardnews/resolve_images.py $(cat specs.txt)
+
+      - name: 렌더·검수
+        id: render
+        run: |
+          python3 cardnews/render.py $(cat specs.txt) | tee render.log || true
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, pathlib, os
+          day = "${{ steps.specs.outputs.day }}"
+          ready, fix = [], []
+          for m in pathlib.Path("cardnews/out", day).glob("*/meta.json"):
+              d = json.loads(m.read_text("utf-8"))
+              (ready if d["status"] == "ready" else fix).append(d["id"])
+          print("ready=" + " ".join(sorted(ready)))
+          print("fix=" + " ".join(sorted(fix)))
+          print(f"summary=준비 {len(ready)}건 · 수정 필요 {len(fix)}건")
+          PY
+
+      - name: 백업(Actions 아티팩트, 14일)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cardnews-${{ steps.specs.outputs.day }}
+          path: |
+            cardnews/out/${{ steps.specs.outputs.day }}
+            !cardnews/out/${{ steps.specs.outputs.day }}/*/_html
+          retention-days: 14
+
+      - name: 구글 드라이브 업로드
+        if: env.RCLONE_CONFIG_TEXT != ''
+        run: |
+          curl -fsSL https://rclone.org/install.sh | sudo bash
+          mkdir -p ~/.config/rclone
+          printf '%s' "$RCLONE_CONFIG_TEXT" > ~/.config/rclone/rclone.conf
+          DIR="${DRIVE_DIR:-카드뉴스}/${{ steps.specs.outputs.day }}"
+          for id in ${{ steps.render.outputs.ready }}; do
+            rclone copy "cardnews/out/${{ steps.specs.outputs.day }}/$id" "gdrive:$DIR/$id" \
+              --exclude "_html/**" --exclude "meta.json"
+          done
+          echo "드라이브: $DIR"
+
+      - name: 텔레그램 알림
+        if: always() && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != ''
+        run: |
+          TEXT="📰 카드뉴스 ${{ steps.specs.outputs.day }} — ${{ steps.render.outputs.summary }}
+          준비: ${{ steps.render.outputs.ready }}
+          수정 필요: ${{ steps.render.outputs.fix }}
+          드라이브: ${DRIVE_DIR:-카드뉴스}/${{ steps.specs.outputs.day }}"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${TEXT}" > /dev/null

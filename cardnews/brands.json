@@ -1,0 +1,18 @@
+{
+  "sample": {
+    "name": "생활정보 샘플 계정",
+    "handle": "@cardnews_sample",
+    "label": "@cardnews_sample",
+    "accent": "#FF7A1A",
+    "direction": "life",
+    "daily_count": 3
+  },
+  "sample_issue": {
+    "name": "해외 이슈 샘플 계정",
+    "handle": "@issue_sample",
+    "label": "인★issue_sample",
+    "accent": "#2F6BFF",
+    "direction": "issue",
+    "daily_count": 2
+  }
+}

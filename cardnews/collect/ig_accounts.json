@@ -1,0 +1,66 @@
+{
+  "_note": "벤치마킹 계정(Drive cardnews/accounts.txt 13개). 공식 API(Business Discovery)는 비즈니스·크리에이터 계정만 조회된다. direction 은 소재 방향(life/issue). 터진 글은 최근 window_days 중앙값 대비 hot_multiple 배(좋아요 또는 댓글). 후보는 ig_inbox.txt 에 적으면 verdict 기준으로 판정.",
+  "hot_multiple": 2.0,
+  "window_days": 28,
+  "media_limit": 50,
+  "verdict": {
+    "confirm_median_likes": 200,
+    "confirm_posts_per_day": 0.5,
+    "watch_median_likes": 50
+  },
+  "alert_multiple": 5.0,
+  "accounts": [
+    {
+      "username": "realkhalilu",
+      "direction": "issue"
+    },
+    {
+      "username": "_wave_page",
+      "direction": "issue"
+    },
+    {
+      "username": "varo_magazine",
+      "direction": "issue"
+    },
+    {
+      "username": "thespot_kr",
+      "direction": "issue"
+    },
+    {
+      "username": "jadeyumi2",
+      "direction": "life"
+    },
+    {
+      "username": "hotplenow",
+      "direction": "life"
+    },
+    {
+      "username": "__lensmag",
+      "direction": "life"
+    },
+    {
+      "username": "all.about.20s",
+      "direction": "life"
+    },
+    {
+      "username": "heodukgoo",
+      "direction": "life"
+    },
+    {
+      "username": "obbabasso",
+      "direction": "life"
+    },
+    {
+      "username": "kkkk_magazine",
+      "direction": "life"
+    },
+    {
+      "username": "_trend_kr",
+      "direction": "life"
+    },
+    {
+      "username": "zhufinder",
+      "direction": "life"
+    }
+  ]
+}

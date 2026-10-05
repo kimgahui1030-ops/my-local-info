@@ -25,6 +25,12 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: 인스타 벤치마킹(공식 API, 토큰 없으면 건너뜀)
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: python3 cardnews/collect/ig_benchmark.py
+
       - name: 소재 수집
         run: python3 cardnews/collect/collect_sources.py
 

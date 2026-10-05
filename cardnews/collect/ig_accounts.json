@@ -1,0 +1,20 @@
+{
+  "_note": "벤치마킹 계정(Drive cardnews/accounts.txt 13개). 공식 API(Business Discovery)는 비즈니스·크리에이터 계정만 조회된다. direction 은 소재 방향(life/issue).",
+  "hot_multiple": 2.0,
+  "media_limit": 50,
+  "accounts": [
+    {"username": "realkhalilu", "direction": "issue"},
+    {"username": "_wave_page", "direction": "issue"},
+    {"username": "varo_magazine", "direction": "issue"},
+    {"username": "thespot_kr", "direction": "issue"},
+    {"username": "jadeyumi2", "direction": "life"},
+    {"username": "hotplenow", "direction": "life"},
+    {"username": "__lensmag", "direction": "life"},
+    {"username": "all.about.20s", "direction": "life"},
+    {"username": "heodukgoo", "direction": "life"},
+    {"username": "obbabasso", "direction": "life"},
+    {"username": "kkkk_magazine", "direction": "life"},
+    {"username": "_trend_kr", "direction": "life"},
+    {"username": "zhufinder", "direction": "life"}
+  ]
+}

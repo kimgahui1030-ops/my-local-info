@@ -112,6 +112,35 @@ def local_info(today: date) -> list[dict]:
     return out
 
 
+def benchmark_items(today: date, recent_days: int = 21) -> list[dict]:
+    """ig_benchmark.py 가 오늘 만든 결과에서 최근 터진 글만 소재로 가져온다(주제·구조 참고용)."""
+    path = OUT / "benchmark" / f"{today.isoformat()}.json"
+    if not path.exists():
+        return []
+    cutoff = datetime.combine(today - timedelta(days=recent_days), datetime.min.time(), KST)
+    out = []
+    for acc in json.loads(path.read_text("utf-8")).get("accounts", []):
+        for m in acc.get("hot", []):
+            try:
+                ts = datetime.fromisoformat(m["timestamp"].replace("+0000", "+00:00"))
+            except (KeyError, ValueError):
+                continue
+            if ts < cutoff:
+                continue
+            caption = m.get("caption") or ""
+            out.append({
+                "id": item_id(m["permalink"]),
+                "title": clean(caption.split("\n", 1)[0], 200) or f"@{acc['username']} 게시물",
+                "summary": clean(caption),
+                "link": m["permalink"], "published": ts.astimezone(KST).isoformat(timespec="minutes"),
+                "source": f"@{acc['username']}", "feed": "instagram-benchmark",
+                "direction": acc["direction"], "lang": "en" if acc["username"] == "realkhalilu" else "ko",
+                "metrics": {"likes": m.get("like_count"), "comments": m.get("comments_count"),
+                            "x_median": m.get("x_median"), "media_type": m.get("media_type")},
+            })
+    return out
+
+
 def seen_links(today: date, keep_days: int) -> set[str]:
     seen = set()
     for f in OUT.glob("*.json"):
@@ -145,6 +174,10 @@ def main(argv: list[str] | None = None) -> int:
             errors.append({"feed": feed["name"], "error": f"{type(e).__name__}: {e}"[:200]})
             print(f"✖ {feed['name']}: {type(e).__name__}: {e}")
     items += local_info(today)
+    bench = benchmark_items(today)
+    if bench:
+        print(f"✓ 인스타 벤치마킹 터진 글: {len(bench)}건")
+    items += bench
 
     uniq, dup = {}, 0
     for x in items:
